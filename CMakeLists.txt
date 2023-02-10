@@ -28,7 +28,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if(MSVC)
   target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/deps/w32-pthreads/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads ${CMAKE_SOURCE_DIR}/plugins/obs-spout2-filter/deps/Spout_static.lib )
+  target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads ${CMAKE_SOURCE_DIR}/plugins/obs-spout2-filter/deps/Spout_static_dbg.lib )
 endif()
 
 find_qt(VERSION 6 COMPONENTS Widgets Core)
