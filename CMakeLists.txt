@@ -16,7 +16,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   inc/SpoutSenderNames.h
   inc/SpoutSharedMemory.h
   inc/SpoutUtils.h
-  inc/SpoutDX.h
   spout2-texture-filter.h
   spout2-texture-filter.cpp
 )
@@ -28,10 +27,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if(MSVC)
-#  target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/../obs-studio/deps/w32-pthreads/)
   target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/deps/w32-pthreads/")
-  target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/plugins/obs-spout2-filter/deps/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads)
+  target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads ${CMAKE_SOURCE_DIR}/plugins/obs-spout2-filter/deps/Spout_static.lib )
 endif()
 
 find_qt(VERSION 6 COMPONENTS Widgets Core)
