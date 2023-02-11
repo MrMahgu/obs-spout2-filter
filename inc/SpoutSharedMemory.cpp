@@ -49,7 +49,6 @@
 //
 // ====================================================================================
 
-
 //
 // Class: SpoutSharedMemory
 //
@@ -71,16 +70,16 @@ SpoutSharedMemory::~SpoutSharedMemory()
 {
 	try {
 		Close();
-	}
-	catch (...) {
-		MessageBoxA(NULL, "Exception in SpoutSharedMemory destructor", NULL, MB_OK);
+	} catch (...) {
+		MessageBoxA(NULL, "Exception in SpoutSharedMemory destructor",
+			    NULL, MB_OK);
 	}
 }
 
 //---------------------------------------------------------
 // Function: Create
 // Create a new memory segment, or attach to an existing one
-SpoutCreateResult SpoutSharedMemory::Create(const char* name, int size)
+SpoutCreateResult SpoutSharedMemory::Create(const char *name, int size)
 {
 	DWORD err = 0;
 
@@ -88,7 +87,7 @@ SpoutCreateResult SpoutSharedMemory::Create(const char* name, int size)
 	assert(name);
 	assert(size);
 
-	if (m_hMap != NULL)	{
+	if (m_hMap != NULL) {
 		assert(strcmp(name, m_pName) == 0);
 		assert(m_pBuffer && m_hMutex);
 		return SPOUT_ALREADY_CREATED;
@@ -101,16 +100,14 @@ SpoutCreateResult SpoutSharedMemory::Create(const char* name, int size)
 	// In this scenario, CreateFileMapping creates a file mapping object of a specified size
 	// that is backed by the system paging file instead of by a file in the file system.
 
-	m_hMap = CreateFileMappingA ( INVALID_HANDLE_VALUE,
-									NULL,
-									PAGE_READWRITE,
-									0,
-									(DWORD)size,
-									(LPCSTR)name);
+	m_hMap = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+				    0, (DWORD)size, (LPCSTR)name);
 
-	if (m_hMap == NULL)	{
+	if (m_hMap == NULL) {
 		err = GetLastError();
-		SpoutLogError("SpoutSharedMemory::Create - Failed error = %lu (0x%4.4lX)", err, err);
+		SpoutLogError(
+			"SpoutSharedMemory::Create - Failed error = %lu (0x%4.4lX)",
+			err, err);
 		return SPOUT_CREATE_FAILED;
 	}
 
@@ -123,24 +120,25 @@ SpoutCreateResult SpoutSharedMemory::Create(const char* name, int size)
 		alreadyExists = true;
 		// The size of the map will be the same as when it was created.
 		// 2.004 apps will have created a 10 sender map which will not be increased in size thereafter.
-	}
-	else {
+	} else {
 		if (err != 0) {
-			SpoutLogError("SpoutSharedMemory::Create - Error = %lu (0x%4.4lX)", err, err);
+			SpoutLogError(
+				"SpoutSharedMemory::Create - Error = %lu (0x%4.4lX)",
+				err, err);
 		}
 	}
 
 	// We can depend on the mapping object to be initially zeros.
 	// https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createfilemappinga
 
-	m_pBuffer = (char*)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+	m_pBuffer = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 
-	if (!m_pBuffer)	{
+	if (!m_pBuffer) {
 		Close();
 		return SPOUT_CREATE_FAILED;
 	}
 
-	std::string	mutexName;
+	std::string mutexName;
 	mutexName = name;
 	mutexName += "_mutex";
 
@@ -156,35 +154,34 @@ SpoutCreateResult SpoutSharedMemory::Create(const char* name, int size)
 	m_size = size;
 
 	return alreadyExists ? SPOUT_ALREADY_EXISTS : SPOUT_CREATE_SUCCESS;
-
 }
 
 //---------------------------------------------------------
 // Function: Open
 // Open an existing memory map
-bool SpoutSharedMemory::Open(const char* name)
+bool SpoutSharedMemory::Open(const char *name)
 {
 	// Don't call open twice on the same object without a Close()
 	assert(name);
 
-	if (m_hMap)	{
+	if (m_hMap) {
 		assert(strcmp(name, m_pName) == 0);
 		assert(m_pBuffer && m_hMutex);
 		return true;
 	}
 
 	m_hMap = OpenFileMappingA(FILE_MAP_ALL_ACCESS, false, (LPCSTR)name);
-	if (m_hMap == NULL)	{
+	if (m_hMap == NULL) {
 		return false;
 	}
 
-	m_pBuffer = (char*)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-	if (!m_pBuffer)	{
+	m_pBuffer = (char *)MapViewOfFile(m_hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+	if (!m_pBuffer) {
 		Close();
 		return false;
 	}
 
-	std::string	mutexName;
+	std::string mutexName;
 	mutexName = name;
 	mutexName += "_mutex";
 
@@ -200,7 +197,6 @@ bool SpoutSharedMemory::Open(const char* name)
 	m_size = 0;
 
 	return true;
-
 }
 
 //---------------------------------------------------------
@@ -224,31 +220,30 @@ void SpoutSharedMemory::Close()
 	}
 
 	if (m_pName) {
-		free((void*)m_pName);
+		free((void *)m_pName);
 		m_pName = NULL;
 	}
 
 	m_size = 0;
-
 }
 
 //---------------------------------------------------------
 // Function: Lock
 // Lock an open map and return the buffer
-char* SpoutSharedMemory::Lock()
+char *SpoutSharedMemory::Lock()
 {
 	assert(m_lockCount >= 0);
 	assert(m_hMutex);
 
-	if(m_lockCount < 0) {
+	if (m_lockCount < 0) {
 		return NULL;
 	}
 
-	if(!m_hMutex) {
+	if (!m_hMutex) {
 		return NULL;
 	}
 
-	if(!m_pBuffer) {
+	if (!m_pBuffer) {
 		return NULL;
 	}
 
@@ -287,7 +282,7 @@ void SpoutSharedMemory::Unlock()
 //---------------------------------------------------------
 // Function: Name
 // Return the name of an existing map
-const char* SpoutSharedMemory::Name()
+const char *SpoutSharedMemory::Name()
 {
 	return m_pName;
 }
@@ -306,10 +301,11 @@ int SpoutSharedMemory::Size()
 void SpoutSharedMemory::Debug()
 {
 	if (m_pName) {
-		SpoutLogNotice("SpoutSharedMemory::Debug : (%s) m_hMap = [0x%.7X], m_pBuffer = [0x%.7X]", m_pName, LOWORD(m_hMap), PtrToUint(m_pBuffer));
+		SpoutLogNotice(
+			"SpoutSharedMemory::Debug : (%s) m_hMap = [0x%.7X], m_pBuffer = [0x%.7X]",
+			m_pName, LOWORD(m_hMap), PtrToUint(m_pBuffer));
+	} else {
+		SpoutLogNotice(
+			"SpoutSharedMemory::Debug : Shared Memory Map is not open\n");
 	}
-	else {
-		SpoutLogNotice("SpoutSharedMemory::Debug : Shared Memory Map is not open\n");
-	}
-
 }

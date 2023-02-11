@@ -21,8 +21,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 # Import libobs as main plugin dependency
-#find_package(libobs REQUIRED)
-#include(cmake/ObsPluginHelpers.cmake)
+find_package(libobs REQUIRED)
+include(cmake/ObsPluginHelpers.cmake)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
@@ -33,11 +33,13 @@ endif()
 
 find_qt(VERSION 6 COMPONENTS Widgets Core)
 
+find_package(obs-frontend-api REQUIRED)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::obs-frontend-api)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
   OBS::libobs
   Qt::Core
-  Qt::Widgets
-  OBS::frontend-api)
+  Qt::Widgets)
 
 set_target_properties(${project_name} PROPERTIES
     CXX_STANDARD 20
