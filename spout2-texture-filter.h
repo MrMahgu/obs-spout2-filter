@@ -1,6 +1,9 @@
 #pragma once
+#ifdef DEBUG
+#pragma comment(lib, "Spout_static_dbg.lib")
+#else
 #pragma comment(lib, "Spout_static.lib")
-//#pragma comment(lib, "SpoutDX.lib")
+#endif
 
 #include <obs-module.h>
 #include <graphics/graphics.h>
@@ -15,7 +18,7 @@
 #define OBS_PLUGIN_VERSION_STRING "0.0.1"
 #define OBS_PLUGIN_LANG "en-US"
 //#define OBS_PLUGIN_COLOR_SPACE GS_RGBA16
-#define OBS_PLUGIN_COLOR_SPACE GS_BGRA_UNORM
+#define OBS_PLUGIN_COLOR_SPACE GS_RGBA_UNORM
 
 #define OBS_UI_SETTING_FILTER_NAME "mahgu.spout2texture.ui.filter_title"
 #define OBS_UI_SETTING_DESC_NAME "mahgu.spout2texture.ui.name_desc"
@@ -54,6 +57,7 @@ static void filter_video_render(void *data, gs_effect_t *effect);
 
 namespace Texture {
 
+static void reset_buffers(void *data, uint32_t width, uint32_t height);
 static void reset(void *data, uint32_t width, uint32_t height);
 static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy);
 
@@ -74,6 +78,10 @@ struct filter {
 	gs_texture_t *shared_texture;
 
 	bool sender_created;
+	bool buffer_swap;
+
+	gs_texture_t *texture_buffer1;
+	gs_texture_t *texture_buffer2;
 };
 
 struct obs_source_info create_filter_info()

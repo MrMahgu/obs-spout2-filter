@@ -35,27 +35,29 @@ static void filter_defaults(obs_data_t *settings)
 
 namespace Texture {
 
-#ifdef DEBUG
-static void debug_report_shared_handle2(void *data)
+static void reset_buffers(void *data, uint32_t width, uint32_t height)
 {
 	auto filter = (struct filter *)data;
 
-	auto handle = gs_texture_get_shared_handle(filter->shared_texture);
+	gs_texture_destroy(filter->texture_buffer1);
+	gs_texture_destroy(filter->texture_buffer2);
 
-	auto ws = "\r\n\r\n\r\n<<<===>>> POSSIBLE TEXTURE HANDLE : " +
-		  std::to_string(handle) + "\r\n\r\n\r\n";
+	filter->texture_buffer1 = gs_texture_create(width, height,
+						    filter->shared_format, 1,
+						    NULL, GS_RENDER_TARGET);
 
-	blog(LOG_INFO, ws.c_str());
+	filter->texture_buffer2 = gs_texture_create(width, height,
+						    filter->shared_format, 1,
+						    NULL, GS_RENDER_TARGET);
 }
-#endif
 
 static void reset(void *data, uint32_t width, uint32_t height)
 {
 	auto filter = (struct filter *)data;
 
-	gs_texture_destroy(filter->shared_texture);
+	reset_buffers(filter, width, height);
 
-	filter->shared_texture = NULL;
+	gs_texture_destroy(filter->shared_texture);
 
 	filter->width = width;
 	filter->height = height;
@@ -74,10 +76,6 @@ static void reset(void *data, uint32_t width, uint32_t height)
 		DXGI_FORMAT_R8G8B8A8_UNORM);
 
 	filter->sender_created = true;
-
-#ifdef DEBUG
-	//debug_report_shared_handle2(filter);
-#endif
 }
 
 static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
@@ -95,8 +93,10 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 	filter->prev_target = gs_get_render_target();
 	filter->prev_space = gs_get_color_space();
 
-	gs_set_render_target_with_color_space(filter->shared_texture, NULL,
-					      GS_CS_SRGB);
+	gs_set_render_target_with_color_space(filter->buffer_swap
+						      ? filter->texture_buffer1
+						      : filter->texture_buffer2,
+					      NULL, GS_CS_SRGB);
 
 	gs_set_viewport(0, 0, filter->width, filter->height);
 
@@ -117,7 +117,15 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 
 	gs_matrix_pop();
 	gs_projection_pop();
-	gs_viewport_pop();
+	gs_viewport_pop();	
+
+	// Copy from oldest buffer
+	gs_copy_texture(filter->shared_texture,
+			!filter->buffer_swap ? filter->texture_buffer1
+					     : filter->texture_buffer2);
+
+	// Swap buffers
+	filter->buffer_swap = !filter->buffer_swap;
 }
 
 } // namespace Texture
@@ -169,11 +177,17 @@ static void *filter_create(obs_data_t *settings, obs_source_t *source)
 
 	// Baseline everything
 	filter->prev_target = nullptr;
+
 	filter->shared_texture = nullptr;
+	filter->texture_buffer1 = nullptr;
+	filter->texture_buffer2 = nullptr;
+
 	filter->shared_format = OBS_PLUGIN_COLOR_SPACE;
+
 	filter->width = 0;
 	filter->height = 0;
 	filter->sender_created = false;
+
 	// Setup the obs context
 	filter->context = source;
 
@@ -195,6 +209,12 @@ static void filter_destroy(void *data)
 		}
 
 		obs_enter_graphics();
+
+		gs_texture_destroy(filter->texture_buffer1);
+		gs_texture_destroy(filter->texture_buffer2);
+
+		filter->texture_buffer1 = nullptr;
+		filter->texture_buffer2 = nullptr;
 
 		gs_texture_destroy(filter->shared_texture);
 
