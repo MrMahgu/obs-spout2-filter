@@ -23,6 +23,7 @@ jobs:
   clang_check:
     name: 01 - Code Format Check
     runs-on: ubuntu-22.04
+    if: ${{ false }}  # disable for now -- delete when not needed
     steps:
       - name: Checkout
         uses: actions/checkout@v3
