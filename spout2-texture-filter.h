@@ -20,8 +20,11 @@
 //#define OBS_PLUGIN_COLOR_SPACE GS_RGBA16
 #define OBS_PLUGIN_COLOR_SPACE GS_RGBA_UNORM
 
-#define OBS_UI_SETTING_FILTER_NAME "mahgu.spout2texture.ui.filter_title"
-#define OBS_UI_SETTING_DESC_NAME "mahgu.spout2texture.ui.name_desc"
+#define OBS_SETTING_UI_FILTER_NAME "mahgu.spout2texture.ui.filter_title"
+#define OBS_SETTING_UI_SENDER_NAME "mahgu.spout2texture.ui.sender_name"
+#define OBS_SETTINGS_UI_BUTTON_TITLE "mahgu.spout2texture.ui.button_title"
+#define OBS_SETTING_DEFAULT_SENDER_NAME \
+	"mahgu.spout2texture.default.sender_name"
 
 #define obs_log(level, format, ...) \
 	blog(level, "[spout2-texture-filter] " format, ##__VA_ARGS__)
@@ -44,14 +47,23 @@ void report_version();
 // OBS plugin stuff
 
 static const char *filter_get_name(void *unused);
-static obs_properties_t *filter_properties(void *data);
-static void filter_defaults(obs_data_t *settings);
+static obs_properties_t *filter_properties(void *unused);
+static void filter_defaults(obs_data_t *defaults);
 
 static void *filter_create(obs_data_t *settings, obs_source_t *source);
 static void filter_destroy(void *data);
 static void filter_render_callback(void *data, uint32_t cx, uint32_t cy);
 static void filter_update(void *data, obs_data_t *settings);
 static void filter_video_render(void *data, gs_effect_t *effect);
+
+// Spout2 sender stuff
+namespace Sender {
+
+
+static void create(void *data, uint32_t width, uint32_t height);
+static void release(void *data);
+
+} // namespace Sender
 
 // Spout2 texture stuff
 
@@ -64,9 +76,7 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy);
 } // namespace Texture
 
 struct filter {
-	obs_source_t *context;
-
-	//std::unique_ptr<spoutDX> spout_sender;
+	obs_source_t *context;	
 
 	uint32_t width;
 	uint32_t height;
@@ -82,6 +92,11 @@ struct filter {
 
 	gs_texture_t *texture_buffer1;
 	gs_texture_t *texture_buffer2;
+
+	const char *setting_sender_name;	// realtime setting
+
+	std::string sender_name;		// spout sendername
+
 };
 
 struct obs_source_info create_filter_info()

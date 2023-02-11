@@ -12,26 +12,71 @@ namespace Spout2Texture {
 static const char *filter_get_name(void *unused)
 {
 	UNUSED_PARAMETER(unused);
-	return obs_module_text(OBS_UI_SETTING_FILTER_NAME);
+	return obs_module_text(OBS_SETTING_UI_FILTER_NAME);
 }
 
-static obs_properties_t *filter_properties(void *data)
+static bool filter_update_spout_sender_name(obs_properties_t *,
+					    obs_property_t *, void *data)
 {
-	UNUSED_PARAMETER(data);
+	auto filter = (struct filter *)data;
+
+	obs_data_t *settings = obs_source_get_settings(filter->context);
+	filter_update(filter, settings);
+	obs_data_release(settings);
+	return true;
+}
+
+static obs_properties_t *filter_properties(void *unused)
+{
+	UNUSED_PARAMETER(unused);
 
 	auto props = obs_properties_create();
 
-	obs_properties_add_text(props, OBS_UI_SETTING_DESC_NAME,
-				obs_module_text(OBS_UI_SETTING_DESC_NAME),
+	obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
+
+	obs_properties_add_text(props, OBS_SETTING_UI_SENDER_NAME,
+				obs_module_text(OBS_SETTING_UI_SENDER_NAME),
 				OBS_TEXT_DEFAULT);
+
+	obs_properties_add_button(props, OBS_SETTINGS_UI_BUTTON_TITLE,
+				  obs_module_text(OBS_SETTINGS_UI_BUTTON_TITLE),
+				  filter_update_spout_sender_name);
 
 	return props;
 }
 
-static void filter_defaults(obs_data_t *settings)
+static void filter_defaults(obs_data_t *defaults)
 {
-	UNUSED_PARAMETER(settings);
+	obs_data_set_default_string(
+		defaults, OBS_SETTING_UI_SENDER_NAME,
+		obs_module_text(OBS_SETTING_DEFAULT_SENDER_NAME));
 }
+
+namespace Sender {
+
+static void release(void *data)
+{
+	auto filter = (struct filter *)data;
+
+	if (filter->sender_created) {
+		spout.ReleaseSenderName(filter->sender_name.c_str());
+	}
+}
+
+static void create(void *data, uint32_t width, uint32_t height)
+{
+
+	auto filter = (struct filter *)data;
+
+	spout.CreateSender(
+		filter->sender_name.c_str(), width, height,
+		(HANDLE)gs_texture_get_shared_handle(filter->shared_texture),
+		DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	filter->sender_created = true;
+}
+
+} // namespace Sender
 
 namespace Texture {
 
@@ -66,16 +111,8 @@ static void reset(void *data, uint32_t width, uint32_t height)
 		gs_texture_create(width, height, filter->shared_format, 1, NULL,
 				  GS_RENDER_TARGET | GS_SHARED_TEX);
 
-	if (filter->sender_created) {
-		spout.ReleaseSenderName("test");
-	}
-
-	spout.CreateSender(
-		"test", width, height,
-		(HANDLE)gs_texture_get_shared_handle(filter->shared_texture),
-		DXGI_FORMAT_R8G8B8A8_UNORM);
-
-	filter->sender_created = true;
+	Sender::release(filter);
+	Sender::create(filter, width, height);
 }
 
 static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
@@ -117,7 +154,7 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 
 	gs_matrix_pop();
 	gs_projection_pop();
-	gs_viewport_pop();	
+	gs_viewport_pop();
 
 	// Copy from oldest buffer
 	gs_copy_texture(filter->shared_texture,
@@ -166,7 +203,21 @@ static void filter_update(void *data, obs_data_t *settings)
 
 	obs_remove_main_render_callback(filter_render_callback, filter);
 
-	// do some thing??
+	if (strcmp(filter->setting_sender_name, filter->sender_name.c_str()) !=
+	    0) {
+		obs_enter_graphics();
+
+		// Relase current sender
+		Sender::release(filter);
+
+		// Change current sender
+		filter->sender_name = std::string(filter->setting_sender_name);
+
+		// Create current sender again
+		Sender::create(filter, filter->width, filter->height);
+
+		obs_leave_graphics();
+	}
 
 	obs_add_main_render_callback(filter_render_callback, filter);
 }
@@ -191,6 +242,13 @@ static void *filter_create(obs_data_t *settings, obs_source_t *source)
 	// Setup the obs context
 	filter->context = source;
 
+	// setup the ui setting
+	filter->setting_sender_name =
+		obs_data_get_string(settings, OBS_SETTING_UI_SENDER_NAME);
+
+	// Copy it to our sendername
+	filter->sender_name = std::string(filter->setting_sender_name);
+
 	// force an update
 	filter_update(filter, settings);
 
@@ -205,7 +263,7 @@ static void filter_destroy(void *data)
 		obs_remove_main_render_callback(filter_render_callback, filter);
 
 		if (filter->sender_created) {
-			spout.ReleaseSenderName("test");
+			spout.ReleaseSenderName(filter->sender_name.c_str());
 		}
 
 		obs_enter_graphics();
