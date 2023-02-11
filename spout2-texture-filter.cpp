@@ -1,9 +1,5 @@
 #include "spout2-texture-filter.h"
 
-#ifdef DEBUG
-#include <string>
-#endif;
-
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(OBS_PLUGIN, OBS_PLUGIN_LANG)
 
@@ -108,8 +104,7 @@ static void reset(void *data, uint32_t width, uint32_t height)
 	filter->height = height;
 
 	filter->shared_texture =
-		gs_texture_create(width, height, filter->shared_format, 1, NULL,
-				  GS_RENDER_TARGET | GS_SHARED_TEX);
+		gs_texture_create(width, height, filter->shared_format, 1, NULL, GS_SHARED_TEX);
 
 	Sender::release(filter);
 	Sender::create(filter, width, height);

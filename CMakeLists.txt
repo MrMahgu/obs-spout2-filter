@@ -10,12 +10,12 @@ set(PLUGIN_AUTHOR "mahgu")
 
 target_sources(${PROJECT_NAME} PRIVATE
   inc/SpoutCommon.h
-  inc/SpoutCopy.h
-  inc/SpoutDirectX.h
-  inc/SpoutFrameCount.h
   inc/SpoutSenderNames.h
   inc/SpoutSharedMemory.h
   inc/SpoutUtils.h
+  inc/SpoutSenderNames.cpp
+  inc/SpoutSharedMemory.cpp
+  inc/SpoutUtils.cpp
   spout2-texture-filter.h
   spout2-texture-filter.cpp
 )
@@ -28,7 +28,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if(MSVC)
   target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/deps/w32-pthreads/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads ${CMAKE_SOURCE_DIR}/plugins/obs-spout2-filter/deps/Spout_static_dbg.lib )
+  target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads)
 endif()
 
 find_qt(VERSION 6 COMPONENTS Widgets Core)

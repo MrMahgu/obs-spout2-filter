@@ -1,9 +1,5 @@
 #pragma once
-#ifdef DEBUG
-#pragma comment(lib, "Spout_static_dbg.lib")
-#else
-#pragma comment(lib, "Spout_static.lib")
-#endif
+#include <string>
 
 #include <obs-module.h>
 #include <graphics/graphics.h>
@@ -59,7 +55,6 @@ static void filter_video_render(void *data, gs_effect_t *effect);
 // Spout2 sender stuff
 namespace Sender {
 
-
 static void create(void *data, uint32_t width, uint32_t height);
 static void release(void *data);
 
@@ -76,7 +71,7 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy);
 } // namespace Texture
 
 struct filter {
-	obs_source_t *context;	
+	obs_source_t *context;
 
 	uint32_t width;
 	uint32_t height;
@@ -93,10 +88,9 @@ struct filter {
 	gs_texture_t *texture_buffer1;
 	gs_texture_t *texture_buffer2;
 
-	const char *setting_sender_name;	// realtime setting
+	const char *setting_sender_name; // realtime setting
 
-	std::string sender_name;		// spout sendername
-
+	std::string sender_name; // spout sendername
 };
 
 struct obs_source_info create_filter_info()
