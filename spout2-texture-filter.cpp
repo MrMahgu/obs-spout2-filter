@@ -103,8 +103,8 @@ static void reset(void *data, uint32_t width, uint32_t height)
 	filter->width = width;
 	filter->height = height;
 
-	filter->shared_texture =
-		gs_texture_create(width, height, filter->shared_format, 1, NULL, GS_SHARED_TEX);
+	filter->shared_texture = gs_texture_create(
+		width, height, filter->shared_format, 1, NULL, GS_SHARED_TEX);
 
 	Sender::release(filter);
 	Sender::create(filter, width, height);
@@ -295,6 +295,7 @@ static void filter_video_render(void *data, gs_effect_t *effect)
 // Writes a simple log entry to OBS
 void report_version()
 {
+
 #ifdef DEBUG
 	info("you can haz spout2-texture tooz (Version: %s)",
 	     OBS_PLUGIN_VERSION_STRING);

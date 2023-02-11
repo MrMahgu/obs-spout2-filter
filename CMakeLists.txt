@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.16...3.21)
 
-project(spout2-texture-filter VERSION 0.0.1)
+project(obs-spout2-filter VERSION 0.0.1)
 
 add_library(${PROJECT_NAME} MODULE)
 
 set(PROJECT_FULL_NAME "Spout2 texture filter")
 
 set(PLUGIN_AUTHOR "mahgu")
+
+set(LINUX_MAINTAINER_EMAIL "me@contoso.com")
 
 target_sources(${PROJECT_NAME} PRIVATE
   inc/SpoutCommon.h
@@ -21,8 +23,11 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 # Import libobs as main plugin dependency
-#find_package(libobs REQUIRED)
-#include(cmake/ObsPluginHelpers.cmake)
+find_package(libobs REQUIRED)
+include(cmake/ObsPluginHelpers.cmake)
+
+find_package(obs-frontend-api REQUIRED)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::obs-frontend-api)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
@@ -36,8 +41,7 @@ find_qt(VERSION 6 COMPONENTS Widgets Core)
 target_link_libraries(${PROJECT_NAME} PRIVATE
   OBS::libobs
   Qt::Core
-  Qt::Widgets
-  OBS::frontend-api)
+  Qt::Widgets)
 
 set_target_properties(${project_name} PROPERTIES
     CXX_STANDARD 20

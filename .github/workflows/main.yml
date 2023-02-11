@@ -17,7 +17,7 @@ on:
       - main
 
 env:
-  PLUGIN_NAME: 'obs-plugintemplate'
+  PLUGIN_NAME: 'obs-spout2-filter'
 
 jobs:
   clang_check:
@@ -35,12 +35,6 @@ jobs:
       - name: Run clang-format
         run: ./.github/scripts/check-format.sh && ./.github/scripts/check-changes.sh
 
-      - name: Install cmake-format
-        run: sudo pip install cmakelang
-
-      - name: Run cmake-format
-        run: ./.github/scripts/check-cmake.sh
-
   macos_build:
     name: 02 - macOS
     runs-on: macos-12
@@ -48,7 +42,7 @@ jobs:
       fail-fast: true
       matrix:
         arch: [x86_64, arm64, universal]
-    if: always()
+    if: ${{ false }}  # disable for now  -- was -- always()
     needs: [clang_check]
     outputs:
       commitHash: ${{ steps.setup.outputs.commitHash }}
@@ -178,7 +172,7 @@ jobs:
       fail-fast: true
       matrix:
         arch: [x86_64]
-    if: always()
+    if: ${{ false }}  # disable for now -- was -- always()
     needs: [clang_check]
     outputs:
       commitHash: ${{ steps.setup.outputs.commitHash }}
@@ -349,7 +343,7 @@ jobs:
     name: 03 - Create and upload release
     runs-on: ubuntu-22.04
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-    needs: [macos_build, linux_build, windows_build]
+    needs: [windows_build]
     defaults:
       run:
         shell: bash
@@ -368,7 +362,7 @@ jobs:
           ## CHECKSUM GENERATION SCRIPT
           shopt -s extglob
           echo "### Checksums" > ${{ github.workspace }}/CHECKSUMS.txt
-          for file in ${{ github.workspace }}/**/@(*.pkg|*.exe|*.deb|*.zip); do
+          for file in ${{ github.workspace }}/**/@(*.exe|*.zip); do
             echo "    ${file##*/}: $(sha256sum "${file}" | cut -d " " -f 1)" >> ${{ github.workspace }}/CHECKSUMS.txt
           done
 
@@ -384,5 +378,3 @@ jobs:
           files: |
             ${{ github.workspace }}/**/*.zip
             ${{ github.workspace }}/**/*.exe
-            ${{ github.workspace }}/**/*.deb
-            ${{ github.workspace }}/**/*.pkg
