@@ -39,8 +39,7 @@ find_qt(VERSION 6 COMPONENTS Widgets Core)
 target_link_libraries(${PROJECT_NAME} PRIVATE
   OBS::libobs
   Qt::Core
-  Qt::Widgets
-  OBS::frontend-api)
+  Qt::Widgets)
 
 set_target_properties(${project_name} PROPERTIES
     CXX_STANDARD 20
