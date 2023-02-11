@@ -21,8 +21,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 # Import libobs as main plugin dependency
-#find_package(libobs REQUIRED)
-#include(cmake/ObsPluginHelpers.cmake)
+find_package(libobs REQUIRED)
+include(cmake/ObsPluginHelpers.cmake)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
