@@ -43,8 +43,8 @@ void report_version();
 // OBS plugin stuff
 
 static const char *filter_get_name(void *unused);
-static obs_properties_t *filter_properties(void *unused);
-static void filter_defaults(obs_data_t *defaults);
+static obs_properties_t *filter_get_properties(void *unused);
+static void filter_get_defaults(obs_data_t *defaults);
 
 static void *filter_create(obs_data_t *settings, obs_source_t *source);
 static void filter_destroy(void *data);
@@ -102,8 +102,8 @@ struct obs_source_info create_filter_info()
 	filter_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_SRGB;
 
 	filter_info.get_name = filter_get_name;
-	filter_info.get_properties = filter_properties;
-	filter_info.get_defaults = filter_defaults;
+	filter_info.get_properties = filter_get_properties;
+	filter_info.get_defaults = filter_get_defaults;
 	filter_info.create = filter_create;
 	filter_info.destroy = filter_destroy;
 	filter_info.video_render = filter_video_render;

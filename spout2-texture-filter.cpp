@@ -22,7 +22,7 @@ static bool filter_update_spout_sender_name(obs_properties_t *,
 	return true;
 }
 
-static obs_properties_t *filter_properties(void *unused)
+static obs_properties_t *filter_get_properties(void *unused)
 {
 	UNUSED_PARAMETER(unused);
 
@@ -41,7 +41,7 @@ static obs_properties_t *filter_properties(void *unused)
 	return props;
 }
 
-static void filter_defaults(obs_data_t *defaults)
+static void filter_get_defaults(obs_data_t *defaults)
 {
 	obs_data_set_default_string(
 		defaults, OBS_SETTING_UI_SENDER_NAME,
