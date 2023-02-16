@@ -19,19 +19,19 @@
             }
         },
         "qt5": {
-            "version": "2022-08-02",
+            "version": "2023-01-06",
             "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
             "label": "Pre-built Qt5",
             "hashes": {
-                "macos-x86_64": "3d0381a52b0e4d49967936c4357f79ac711f43564329304a6db5c90edadd2697",
-                "macos-arm64": "f4b32548c0530f121956bf0a9a70c36ecbbfca81073d39c396a1759baf2a05c3",
-                "macos-universal": "9a6cf3b9a6c9efee6ba10df649202e8075e99f3c54ae88dc9a36dbc9d7471c1e",
-                "windows-x64": "6488a33a474f750d5a4a268a5e20c78bb40799d99136a1b7ce3365a843cb2fd7",
-                "windows-x86": "a916e09b0a874036801deab2c8a7ec14fdf5d268aa5511eac5bf40727e0c4e33"
+                "macos-x86_64": "5894ac8a7e3f1fd0035d87a5679eaad08b2193d771124eeb506bc5e54fb7c411",
+                "macos-arm64": "a32a30cf7d9efe0a08f0d58355a17be4ec9fecc9b1a7dc958ff1c16e0a73e14d",
+                "macos-universal": "b06f947cda11452cd6e7d28ae29bb6eb7e61be15445e260d49e21f555f55bd6e",
+                "windows-x64": "4ac110d268272ff073957493d9d84cfec75939b6e3d845bc3b17d9d7620d869a",
+                "windows-x86": "6c1d7dfb23fbb7a32bcbf6e963db61d408be91db56a2e2dae5f7905173445fe2"
             },
             "pdb-hashes": {
-                "windows-x64": "e0e5070143fcad9311a68ce5685d8ba8f34f581ed6942b7a92d360f94ca1ba11",
-                "windows-x86": "36642d1052aa461964f46c17610477b0d9b9defbe2d745ccaacb85f805c1bec2"
+                "windows-x64": "29edaf1b9442b374a2d8252d4d0936424e353e91a59fff4265cd13bb2ae71e7a",
+                "windows-x86": "67044abd25420c2e77c57f0270940df06092a2f271982a399c254e3af278bff1"
             }
         },
         "qt6": {
@@ -39,9 +39,9 @@
             "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
             "label": "Pre-built Qt6",
             "hashes": {
-                "macos-x86_64": "a83f72a11023b03b6cb2dc365f0a66ad9df31163bbb4fe2df32d601856a9fad3",
-                "macos-arm64": "2f30af90c049670a5660656adbb440668aa1b0567f75a5f29e1def9108928403",
-                "macos-universal": "252e6684f43ab9c6f262c73af739e2296ce391b998da2c4ee04c254aaa07db18",
+                "macos-x86_64": "67d1080536efb4e47a5f4fcf47d07680ef5847d72a1170cb917fc65698b628b0",
+                "macos-arm64": "06b363a842de8d470d4fcae68823178574905de6c98c5dd21052b8a96fc9a0a3",
+                "macos-universal": "811c022a178230d3b9ad1eeb8ae9e1de0e6017b69364f50b183e36246509e0e8",
                 "windows-x64": "525370749446703f165b9c538d94a4f7badb2715cbe3360975ca5579300f2c3c",
                 "windows-x86": "799cea49fcfeab602aefb813bc40a2673a8fd4404e4c7c142e513928ce0ccf4b"
             },
