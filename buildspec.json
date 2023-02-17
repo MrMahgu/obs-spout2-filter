@@ -11,9 +11,9 @@
             "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
             "label": "Pre-built obs-deps",
             "hashes": {
-                "macos-x86_64": "7637e52305e6fc53014b5aabd583f1a4490b1d97450420e977cae9a336a29525",
-                "macos-arm64": "755e0fa69b17a3ae444e1befa9d91d77e3cafe628fbd1c6333686091826595cd",
-                "macos-universal": "de057e73e6fe0825664c258ca2dd6798c41ae580bf4d896e1647676a4941934a",
+                "macos-x86_64": "67d1080536efb4e47a5f4fcf47d07680ef5847d72a1170cb917fc65698b628b0",
+                "macos-arm64": "06b363a842de8d470d4fcae68823178574905de6c98c5dd21052b8a96fc9a0a3",
+                "macos-universal": "811c022a178230d3b9ad1eeb8ae9e1de0e6017b69364f50b183e36246509e0e8",
                 "windows-x64": "1026a72af2548d589e30d58edf2b3c7f2f6a16d8fd481ab33aab64d8181b1556",
                 "windows-x86": "315a9e445d518503bdd36d9fdfee2b2ba1f791355420055c0ef97cd54897a754"
             }
@@ -39,9 +39,9 @@
             "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
             "label": "Pre-built Qt6",
             "hashes": {
-                "macos-x86_64": "67d1080536efb4e47a5f4fcf47d07680ef5847d72a1170cb917fc65698b628b0",
-                "macos-arm64": "06b363a842de8d470d4fcae68823178574905de6c98c5dd21052b8a96fc9a0a3",
-                "macos-universal": "811c022a178230d3b9ad1eeb8ae9e1de0e6017b69364f50b183e36246509e0e8",
+                "macos-x86_64": "d6b1055e16a5569fcbee3076488bbaf0ea7323632d6ea978937b70f10cd1a50d",
+                "macos-arm64": "39980aed1e2cd82b791f3d8329f0445f01754e4af762724efbd5301ab2128af8",
+                "macos-universal": "dfa3c48ee46765029d06773ba08d84b3f11360547171c8e736019c77fabff80d",
                 "windows-x64": "525370749446703f165b9c538d94a4f7badb2715cbe3360975ca5579300f2c3c",
                 "windows-x86": "799cea49fcfeab602aefb813bc40a2673a8fd4404e4c7c142e513928ce0ccf4b"
             },
