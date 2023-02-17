@@ -67,7 +67,8 @@ function Setup-Host {
                     ErrorAction = 'Stop'
                 }
 
-                Invoke-WebRequest @Params
+#                Invoke-WebRequest @Params
+                curl.exe -Lf ${_Uri} -o ${_Filename}
                 Log-Status "Downloaded ${_Label} for ${script:Target}."
             } else {
                 Log-Status "Found downloaded ${_Label}."
