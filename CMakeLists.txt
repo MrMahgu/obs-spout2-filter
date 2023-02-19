@@ -45,21 +45,14 @@ if(MSVC)
   target_link_libraries(${PROJECT_NAME} PRIVATE OBS::w32-pthreads)
 endif()
 
-# Find Qt6
-find_qt(VERSION 6 COMPONENTS Widgets)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE
   OBS::libobs
-  Qt::Widgets
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
-    AUTOMOC ON
-    AUTOUIC ON
-    AUTORCC ON
 )
 
 # --- Windows-specific build settings and tasks ---
