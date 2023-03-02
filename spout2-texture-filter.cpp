@@ -1,5 +1,7 @@
 #include "spout2-texture-filter.h"
 
+#include <ranges>
+
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(OBS_PLUGIN, OBS_PLUGIN_LANG)
 
@@ -80,16 +82,11 @@ static void reset_buffers(void *data, uint32_t width, uint32_t height)
 {
 	auto filter = (struct filter *)data;
 
-	gs_texture_destroy(filter->texture_buffer1);
-	gs_texture_destroy(filter->texture_buffer2);
+	std::ranges::for_each(filter->buffer_texture, gs_texture_destroy);
 
-	filter->texture_buffer1 = gs_texture_create(width, height,
-						    filter->shared_format, 1,
-						    NULL, GS_RENDER_TARGET);
-
-	filter->texture_buffer2 = gs_texture_create(width, height,
-						    filter->shared_format, 1,
-						    NULL, GS_RENDER_TARGET);
+	for (auto &elm : filter->buffer_texture)
+		elm = gs_texture_create(width, height, filter->shared_format,
+					1, NULL, GS_RENDER_TARGET);
 }
 
 static void reset(void *data, uint32_t width, uint32_t height)
@@ -117,6 +114,12 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 	if (filter->width != cx || filter->height != cy)
 		Texture::reset(filter, cx, cy);
 
+	uint32_t prev_buffer_index =
+		filter->buffer_index == 0 ? 3 : filter->buffer_index - 1;
+
+	uint32_t next_buffer_index =
+		filter->buffer_index == 3 ? 0 : filter->buffer_index + 1;
+
 	gs_viewport_push();
 	gs_projection_push();
 	gs_matrix_push();
@@ -124,11 +127,11 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 
 	filter->prev_target = gs_get_render_target();
 	filter->prev_space = gs_get_color_space();
+	
+	gs_copy_texture(filter->shared_texture, filter->buffer_texture[prev_buffer_index]);
 
-	gs_set_render_target_with_color_space(filter->buffer_swap
-						      ? filter->texture_buffer1
-						      : filter->texture_buffer2,
-					      NULL, GS_CS_SRGB);
+	gs_set_render_target_with_color_space(filter->buffer_texture[filter->buffer_index], NULL,
+		GS_CS_SRGB_16F);
 
 	gs_set_viewport(0, 0, filter->width, filter->height);
 
@@ -141,7 +144,8 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 	gs_blend_state_push();
 	gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
 
-	obs_source_video_render(target);
+	//obs_source_video_render(target);
+	obs_source_default_render(target);
 
 	gs_blend_state_pop();
 	gs_set_render_target_with_color_space(filter->prev_target, NULL,
@@ -151,13 +155,12 @@ static void render(void *data, obs_source_t *target, uint32_t cx, uint32_t cy)
 	gs_projection_pop();
 	gs_viewport_pop();
 
-	// Copy from oldest buffer
-	gs_copy_texture(filter->shared_texture,
-			!filter->buffer_swap ? filter->texture_buffer1
-					     : filter->texture_buffer2);
+	// copy this new rendererd tezture into the next buffer
+	gs_copy_texture(filter->buffer_texture[next_buffer_index],
+			filter->buffer_texture[filter->buffer_index]);
 
-	// Swap buffers
-	filter->buffer_swap = !filter->buffer_swap;
+	// update buffer index
+	filter->buffer_index = next_buffer_index;
 }
 
 } // namespace Texture
@@ -192,7 +195,7 @@ static void filter_render_callback(void *data, uint32_t cx, uint32_t cy)
 
 static void filter_update(void *data, obs_data_t *settings)
 {
-	UNUSED_PARAMETER(settings);
+	//UNUSED_PARAMETER(settings);
 
 	auto filter = (struct filter *)data;
 
@@ -223,10 +226,12 @@ static void *filter_create(obs_data_t *settings, obs_source_t *source)
 
 	// Baseline everything
 	filter->prev_target = nullptr;
+	filter->buffer_index = 0;
 
 	filter->shared_texture = nullptr;
-	filter->texture_buffer1 = nullptr;
-	filter->texture_buffer2 = nullptr;
+
+	//filter->texture_buffer1 = nullptr;
+	//filter->texture_buffer2 = nullptr;
 
 	filter->shared_format = OBS_PLUGIN_COLOR_SPACE;
 
@@ -263,11 +268,8 @@ static void filter_destroy(void *data)
 
 		obs_enter_graphics();
 
-		gs_texture_destroy(filter->texture_buffer1);
-		gs_texture_destroy(filter->texture_buffer2);
-
-		filter->texture_buffer1 = nullptr;
-		filter->texture_buffer2 = nullptr;
+		std::ranges::for_each(filter->buffer_texture,
+						      gs_texture_destroy);
 
 		gs_texture_destroy(filter->shared_texture);
 

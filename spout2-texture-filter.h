@@ -80,13 +80,15 @@ struct filter {
 	enum gs_color_format shared_format;
 
 	gs_texture_t *prev_target;
+
 	gs_texture_t *shared_texture;
 
 	bool sender_created;
-	bool buffer_swap;
 
-	gs_texture_t *texture_buffer1;
-	gs_texture_t *texture_buffer2;
+	uint32_t buffer_index;
+	uint32_t frame_count;
+
+	gs_texture_t *buffer_texture[4];
 
 	const char *setting_sender_name; // realtime setting
 
