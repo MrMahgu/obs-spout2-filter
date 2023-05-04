@@ -11,22 +11,22 @@
 
 	Copyright (c) 2017-2023, Lynn Jarvis. All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without modification, 
+	Redistribution and use in source and binary forms, with or without modification,
 	are permitted provided that the following conditions are met:
 
-		1. Redistributions of source code must retain the above copyright notice, 
+		1. Redistributions of source code must retain the above copyright notice,
 		   this list of conditions and the following disclaimer.
 
-		2. Redistributions in binary form must reproduce the above copyright notice, 
-		   this list of conditions and the following disclaimer in the documentation 
+		2. Redistributions in binary form must reproduce the above copyright notice,
+		   this list of conditions and the following disclaimer in the documentation
 		   and/or other materials provided with the distribution.
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"	AND ANY 
-	EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE	ARE DISCLAIMED. 
-	IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
-	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"	AND ANY
+	EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE	ARE DISCLAIMED.
+	IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+	PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 	LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -59,7 +59,7 @@
 		19.05.20 - Add missing LPCSTR cast in SpoutMessageBox ShellExecute
 		12.06.20 - Add timing functions for testing
 		01.09.20 - Add seconds to log file header
-		03.09.20 - Add DisableSpoutLogFile() DisableLogs() and EnableLogs() 
+		03.09.20 - Add DisableSpoutLogFile() DisableLogs() and EnableLogs()
 				   for more control over logging
 		09.09.20 - move _doLog outside anonymous namespace
 		23.09.20 - _doLog : always prevent multiple logs by comparing with the last
@@ -114,6 +114,16 @@
 		01.12.22 - Registry functions
 				     check for empty subkey and valuename strings
 					 include valuename in warnings
+		14.01.23 - OpenSpoutConsole - add MessageBox warning if using a dll
+				   EnableSpoutLog - open console rather than call OpenSpoutConsole
+		15.01.23 - Use SpoutMessageBox so it doesn't freeze the application GUI
+		16.01.23 - Add SpoutMessageBox caption
+		17.01.23 - Add SpoutMessageBox with variable arguments
+				   Add ConPrint for SpoutUtils console (printf replacement)
+				   Remove dll build warning MessageBox.
+				   Change "ConPrint" to "_conprint" and use Writefile instead of cout.
+		18.01.23 - _conprint - cast WriteFile size argument to DWORD
+		19.03.23 - Update SDKversion to 2.007.010
 
 */
 
@@ -161,7 +171,7 @@ double m_FrameStart = 0.0;
 
 // Spout SDK version number string
 // Major, minor, release
-std::string SDKversion = "2.007.009";
+std::string SDKversion = "2.007.010";
 
 //
 // Group: Information
@@ -231,11 +241,12 @@ HMODULE GetCurrentModule()
 //
 void OpenSpoutConsole()
 {
-	// AllocConsole fails if the process already has a console
-	// Is a console associated with the calling process?
-	if (GetConsoleWindow()) {
-		bConsole = true;
-	} else {
+	if (!GetConsoleWindow()) {
+
+		//
+		// Application console window mot found
+		//
+
 		// Get calling process window
 		HWND hwndFgnd = GetForegroundWindow();
 		if (AllocConsole()) {
@@ -272,8 +283,8 @@ void OpenSpoutConsole()
 void CloseSpoutConsole(bool bWarning)
 {
 	if (bWarning) {
-		if (MessageBoxA(NULL, "Console close - are you sure?", "Spout",
-				MB_YESNO) == IDNO)
+		if (MessageBoxA(NULL, "Console close - are you sure?",
+				"CloseSpoutConsole", MB_YESNO) == IDNO)
 			return;
 	}
 	if (pCout) {
@@ -365,7 +376,10 @@ void EnableSpoutLog()
 	bEnableLog = true;
 
 	// Console output
-	if (!bConsole)
+	if (GetConsoleWindow()) {
+		SetConsoleTitleA("Spout Log");
+		bConsole = true;
+	} else if (!bConsole)
 		OpenSpoutConsole();
 
 	// Initialize current log string
@@ -700,13 +714,40 @@ void _doLog(SpoutLogLevel level, const char *format, va_list args)
 	}
 }
 
+// ---------------------------------------------------------
+// Function: _conprint
+// Print to console - (printf replacement).
+//
+int _conprint(const char *format, ...)
+{
+
+	// Construct the message
+	va_list args;
+	va_start(args, format);
+	vsprintf_s(logChars, 1024, format, args);
+	va_end(args);
+
+	//
+	// Write to the console without line feed
+	//
+	// cout and printf do not write if another console is opened by the application.
+	// WriteFile writes to either of them.
+	//
+	DWORD nBytesWritten = 0;
+	WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), logChars,
+		  (DWORD)strlen(logChars), &nBytesWritten, NULL);
+
+	logChars[0] = 0;
+	return (int)nBytesWritten;
+}
+
 //
 // Group: MessageBox
 //
 
 // ---------------------------------------------------------
 // Function: SpoutMessageBox
-// SpoutPanel MessageBox dialog with optional timeout.
+// MessageBox dialog with optional timeout.
 //
 // Used where a Windows MessageBox would interfere with the application GUI.
 //
@@ -715,13 +756,34 @@ int SpoutMessageBox(const char *message, DWORD dwMilliseconds)
 {
 	if (!message)
 		return 0;
+	return SpoutMessageBox(NULL, message, "Message", MB_OK, dwMilliseconds);
+}
 
-	return SpoutMessageBox(NULL, message, "spout", MB_OK, dwMilliseconds);
+// MessageBox with variable arguments
+int SPOUT_DLLEXP SpoutMessageBox(const char *caption, const char *format, ...)
+{
+	std::string strmessage;
+	std::string strcaption;
+
+	// Construct the message
+	va_list args;
+	va_start(args, format);
+	vsprintf_s(logChars, 1024, format, args);
+	strmessage = logChars;
+	va_end(args);
+
+	if (caption && *caption)
+		strcaption = caption;
+	else
+		strcaption = "Message";
+
+	return SpoutMessageBox(NULL, strmessage.c_str(), strcaption.c_str(),
+			       MB_OK);
 }
 
 // ---------------------------------------------------------
 // Function: SpoutMessageBox
-// SpoutPanel Messagebox with standard arguments and optional timeout
+// Messagebox with standard arguments and optional timeout
 //
 // Replaces an existing MessageBox call.
 int SpoutMessageBox(HWND hwnd, LPCSTR message, LPCSTR caption, UINT uType,
@@ -736,9 +798,19 @@ int SpoutMessageBox(HWND hwnd, LPCSTR message, LPCSTR caption, UINT uType,
 	if (ReadPathFromRegistry(HKEY_CURRENT_USER,
 				 "Software\\Leading Edge\\SpoutPanel",
 				 "InstallPath", path)) {
-		// Does the file exist ?
+		// Does SpoutPanel exist ?
 		if (_access(path, 0) != -1) {
-			// Open SpoutPanel text message
+
+			//
+			// Add optional arguments
+			//
+
+			// Text dialog caption
+			if (caption && *caption) {
+				spoutmessage += " /CAPTION ";
+				spoutmessage += caption;
+			}
+
 			// If a timeout has been specified, add the timeout option and value
 			// SpoutPanel handles the timeout delay
 			if (dwMilliseconds > 0) {
